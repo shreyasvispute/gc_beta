@@ -40,7 +40,7 @@ def get_transcripts_and_dump_into_disk(student, BASE_DIR):
     pdf_writer = PdfFileWriter()
     for i in range(pdf.getNumPages()):
         pdf_writer.addPage(pdf.getPage(i))
-    outpur_file_dir = os.path.join(BASE_DIR, "sample_output", student.name)
+    outpur_file_dir = os.path.join(BASE_DIR, "media", student.name)
     # output_file_path = os.path.join(outpur_file_dir,f'{student.id}-[{",".join(map(str, student.transcript.valid_pages))}].pdf')
     output_file_path = os.path.join(outpur_file_dir, f'{student.name}-raw-transcripts.pdf')
     print('dumping file to:', output_file_path)
