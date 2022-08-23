@@ -1,59 +1,55 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Breadcrumb,
   Button,
+  ButtonGroup,
   Row,
   Col,
+  InputGroup,
+  Form,
+  Dropdown,
+  Card,
+  Table,
   Image,
+  DropdownButton,
+  Modal,
+  Spinner,
+  Container,
   Accordion,
 } from "@themesberg/react-bootstrap";
 import { useParams } from "react-router-dom";
 import { useTable } from "react-table";
 import { JsonToTable } from "react-json-to-table";
+import LoadingOverlay from "react-loading-overlay";
+import { Document, Page, Outline } from "react-pdf/dist/esm/entry.webpack";
 // import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHome, faPlus } from "@fortawesome/free-solid-svg-icons";
+import {
+  faHome,
+  faPlus,
+  faCog,
+  faCheck,
+  faSearch,
+  faSlidersH,
+} from "@fortawesome/free-solid-svg-icons";
 import axios from "../utils/http-axios";
+import uploadService from "../utils/fileUploadServices";
+import studentServices from "../utils/studentServices";
+import Documentation from "../../components/Documentation";
+import AccordionComponent from "../../components/AccordionComponent";
 // import testImage from "C:\\Projects\\GC_beta\\GC_beta\\sample_output\\Deng\\p1-t3.png"
 // let testImage = require("C:\\Projects\\GC_beta\\GC_beta\\sample_output\\Deng\\p1-t3.png")
+
+//Ry
+import BootstrapTable from "react-bootstrap-table-next";
+import cellEditFactory from "react-bootstrap-table2-editor";
+import { Column, HeaderCell, Cell } from "rsuite-table";
 
 export default () => {
   let params = useParams();
   const [studentName, setStudentName] = useState("");
   const [tables, setTables] = useState([]);
-  const data = React.useMemo(
-    () => [
-      {
-        col1: "Hello",
-        col2: "World",
-      },
-      {
-        col1: "react-table",
-        col2: "rocks",
-      },
-      {
-        col1: "whatever",
-        col2: "you want",
-      },
-    ],
-    []
-  );
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: "Column 1",
-        accessor: "col1", // accessor is the "key" in the data
-      },
-      {
-        Header: "Column 2",
-        accessor: "col2",
-      },
-    ],
-    []
-  );
-  const tableInstance = useTable({ columns, data });
-  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-    tableInstance;
 
   useEffect(() => {
     if (tables.length === 0) {
@@ -68,12 +64,72 @@ export default () => {
     const response = await axios
       .get(`/api/students/${params["id"]}/transcript?action=view`)
       .then((response) => {
-        // console.log(response.data['tables']);
+        //console.log(response.data['tables']);
         setTables(response.data["tables"]);
         setStudentName(response.data["student_name"]);
       })
       .catch();
-    // console.log(tables);
+  };
+
+  const columns = [
+    {
+      //=(alldata) => [console.log(alldata[0]),
+      dataField: "index",
+      text: "index",
+    },
+    {
+      dataField: "Course Title",
+      text: "Course Title",
+    },
+    {
+      dataField: "Credit",
+      text: "Credit",
+    },
+    {
+      dataField: "Score",
+      text: "Score",
+    },
+    {
+      dataField: "Grade Point",
+      text: "Grade Point",
+    },
+  ];
+
+  const EditCell = ({ rowData, onChange, ...props }) => {
+    tables.map((table) => {
+      rowData = JSON.parse(table.table_data)["data"];
+
+      console.log(JSON.parse(table.table_data)["schema"]["fields"]);
+    });
+    console.log("obgynnnnnnnnnnnnnnnnnnnnnnnn");
+    console.log(rowData);
+    console.log("rowDatazzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+    return (
+      <Cell {...props}>
+        {rowData !== null ? (
+          <input className="input" defaultValue={JSON.stringify(rowData)} />
+        ) : (
+          rowData
+        )}
+      </Cell>
+    );
+  };
+
+  //Ry---modified
+  const onSaveData = async () => {
+    // const columns = Array.from(tableEl.querySelectorAll("th")).map(
+    //   (it) => it.textContent
+    // );
+    // const rows = tableEl.querySelectorAll("tbody > tr");
+    // return Array.from(rows).map((row) => {
+    //   const cells = Array.from(row.querySelectorAll("td"));
+    //   return columns.reduce((obj, col, idx) => {
+    //     obj[col] = cells[idx].textContent;
+    //     return obj;
+    //   }, {});
+    // });
+
+    console.log("Save data");
   };
 
   return (
@@ -103,6 +159,13 @@ export default () => {
       </div>
       <Accordion defaultActiveKey="0">
         {tables.map((table, idx) => {
+          let columnNames = JSON.parse(table.table_data)["schema"]["fields"];
+          const newColumnNames = columnNames.map((v) => ({
+            ...v,
+            dataField: v.name,
+            text: v.name,
+          }));
+
           return (
             <Accordion.Item eventKey={idx} key={"table-" + idx}>
               <Accordion.Header>
@@ -113,53 +176,27 @@ export default () => {
                   <Col>
                     <Image src={table.image_path} />
                   </Col>
+                  {/* Ry*/}
                   <Col>
-                    <JsonToTable
-                      hover
-                      className="user-table align-items-center"
-                      json={JSON.parse(table.table_data)["data"]}
+                    <BootstrapTable
+                      key={`$(table.page) "+" $(table.table_num)`}
+                      keyField="index"
+                      data={JSON.parse(table.table_data)["data"]}
+                      columns={newColumnNames}
+                      cellEdit={cellEditFactory({
+                        mode: "click",
+                        blurToSave: true,
+                      })}
                     />
-                    {/*<Table {...getTableProps()} hover className="user-table align-items-center">*/}
-                    {/*    <thead>*/}
-                    {/*    {// Loop over the header rows*/}
-                    {/*        headerGroups.map(headerGroup => (*/}
-                    {/*            // Apply the header row props*/}
-                    {/*            <tr {...headerGroup.getHeaderGroupProps()}>*/}
-                    {/*                {// Loop over the headers in each row*/}
-                    {/*                    headerGroup.headers.map(column => (*/}
-                    {/*                        // Apply the header cell props*/}
-                    {/*                        <th {...column.getHeaderProps()}>*/}
-                    {/*                            {// Render the header*/}
-                    {/*                                column.render('Header')}*/}
-                    {/*                        </th>*/}
-                    {/*                    ))}*/}
-                    {/*            </tr>*/}
-                    {/*        ))}*/}
-                    {/*    </thead>*/}
-                    {/*    /!* Apply the table body props *!/*/}
-                    {/*    <tbody {...getTableBodyProps()}>*/}
-                    {/*    {// Loop over the table rows*/}
-                    {/*        rows.map(row => {*/}
-                    {/*            // Prepare the row for display*/}
-                    {/*            prepareRow(row)*/}
-                    {/*            return (*/}
-                    {/*                // Apply the row props*/}
-                    {/*                <tr {...row.getRowProps()}>*/}
-                    {/*                    {// Loop over the rows cells*/}
-                    {/*                        row.cells.map(cell => {*/}
-                    {/*                            // Apply the cell props*/}
-                    {/*                            return (*/}
-                    {/*                                <td {...cell.getCellProps()}>*/}
-                    {/*                                    {// Render the cell contents*/}
-                    {/*                                        cell.render('Cell')}*/}
-                    {/*                                </td>*/}
-                    {/*                            )*/}
-                    {/*                        })}*/}
-                    {/*                </tr>*/}
-                    {/*            )*/}
-                    {/*        })}*/}
-                    {/*    </tbody>*/}
-                    {/*</Table>*/}
+
+                    <Button type="submit" id="btn" onClick={onSaveData}>
+                      save
+                    </Button>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <EditCell />
                   </Col>
                 </Row>
               </Accordion.Body>
@@ -167,6 +204,17 @@ export default () => {
           );
         })}
       </Accordion>
+      <Row>
+        <Col>
+          <Link
+            to={{
+              pathname: `/ViewTableData/${params["id"]}`,
+            }}
+          >
+            <Button> View Table Data </Button>
+          </Link>
+        </Col>
+      </Row>
     </>
   );
 };

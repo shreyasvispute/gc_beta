@@ -8,7 +8,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework_mongoengine.viewsets import ModelViewSet, GenericViewSet
 
 from .handlers import ExtractTableHandler
-from .models import University, Student, Department, Identifier, Transcript, Education
+from .models import StudentTable, University, Student, Department, Identifier, Transcript, Education
 from .serializers import UniversitySerializer, StudentSerializer, TranscriptSerializer
 from .utils import extract_pages_from_raw_file, get_transcripts_and_dump_into_disk
 from GC_beta.settings import BASE_DIR
@@ -129,6 +129,15 @@ def student_transcript(request, pk):
             except:
                 return JsonResponse({'error': "student not found."}, status=404)
             processed_transcripts = student.transcript.processed_data
+            tables_in_dict = [json.loads(x.to_json()) for x in processed_transcripts]
+            return JsonResponse({'student_name': student.name, 'tables': tables_in_dict})
+        elif request.GET.get('action') == 'viewtables':
+            student = None
+            try:
+                student = Student.objects.get(id=pk)
+            except:
+                return JsonResponse({'error': "student not found."}, status=404)
+            processed_transcripts = StudentTable.objects.all()
             tables_in_dict = [json.loads(x.to_json()) for x in processed_transcripts]
             return JsonResponse({'student_name': student.name, 'tables': tables_in_dict})
 

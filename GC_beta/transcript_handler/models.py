@@ -80,6 +80,16 @@ class Student(Document):
     status = StringField(default="NEW")
 
 
+class StudentTable(Document):
+    course = StringField()
+    credit = StringField()
+    grade_point = StringField()
+    score = StringField()
+    meta = {
+        'collection': 'student_temp',
+        'auto_create_index': True,
+    }
+
 class SingletonABCMeta(ABCMeta):
     _instances = {}
 
