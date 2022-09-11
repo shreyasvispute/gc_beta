@@ -1,136 +1,120 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useReducer } from "react";
 import { Link } from "react-router-dom";
 import {
   Breadcrumb,
   Button,
-  ButtonGroup,
   Row,
   Col,
-  InputGroup,
-  Form,
-  Dropdown,
-  Card,
-  Table,
   Image,
-  DropdownButton,
-  Modal,
-  Spinner,
-  Container,
   Accordion,
 } from "@themesberg/react-bootstrap";
 import { useParams } from "react-router-dom";
-import { useTable } from "react-table";
-import { JsonToTable } from "react-json-to-table";
-import LoadingOverlay from "react-loading-overlay";
-import { Document, Page, Outline } from "react-pdf/dist/esm/entry.webpack";
-// import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faHome,
-  faPlus,
-  faCog,
-  faCheck,
-  faSearch,
-  faSlidersH,
-} from "@fortawesome/free-solid-svg-icons";
+import { faHome, faPlus } from "@fortawesome/free-solid-svg-icons";
 import axios from "../utils/http-axios";
-import uploadService from "../utils/fileUploadServices";
-import studentServices from "../utils/studentServices";
-import Documentation from "../../components/Documentation";
-import AccordionComponent from "../../components/AccordionComponent";
-// import testImage from "C:\\Projects\\GC_beta\\GC_beta\\sample_output\\Deng\\p1-t3.png"
-// let testImage = require("C:\\Projects\\GC_beta\\GC_beta\\sample_output\\Deng\\p1-t3.png")
-
+import { JsonToTable } from "react-json-to-table";
 //Ry
-import BootstrapTable from "react-bootstrap-table-next";
-import cellEditFactory from "react-bootstrap-table2-editor";
-import { Column, HeaderCell, Cell } from "rsuite-table";
+import reducer from "../reducers/tableReducer";
+import Table from "./Tables";
+import { ActionTypes, makeData } from "../utils/studentTable";
 
 export default () => {
   let params = useParams();
+
+  const [state, dispatch] = useReducer(reducer, makeData(1, params["id"]));
+
   const [studentName, setStudentName] = useState("");
   const [tables, setTables] = useState([]);
 
   useEffect(() => {
-    if (tables.length === 0) {
-      fetchData();
-      document.title = `View Transcripts`;
-      console.log("viewing transcripts of student: ");
-    }
-    console.log(studentName);
-  }, [studentName]);
+    dispatch({ type: ActionTypes.ENABLE_RESET });
+  }, [state.data]);
 
-  const fetchData = async () => {
-    const response = await axios
-      .get(`/api/students/${params["id"]}/transcript?action=view`)
-      .then((response) => {
-        //console.log(response.data['tables']);
-        setTables(response.data["tables"]);
-        setStudentName(response.data["student_name"]);
-      })
-      .catch();
-  };
+  // useEffect(() => {
+  //   if (tables.length === 0) {
+  //     fetchData();
+  //     document.title = `View Transcripts`;
+  //     console.log("viewing transcripts of student: ");
+  //   }
+  //   console.log(studentName);
+  // }, [studentName]);
 
-  const columns = [
-    {
-      //=(alldata) => [console.log(alldata[0]),
-      dataField: "index",
-      text: "index",
-    },
-    {
-      dataField: "Course Title",
-      text: "Course Title",
-    },
-    {
-      dataField: "Credit",
-      text: "Credit",
-    },
-    {
-      dataField: "Score",
-      text: "Score",
-    },
-    {
-      dataField: "Grade Point",
-      text: "Grade Point",
-    },
-  ];
+  // const fetchData = async () => {
+  //   const response = await axios
+  //     .get(`/api/students/${params["id"]}/transcript?action=view`)
+  //     .then((response) => {
+  //       //console.log(response.data['tables']);
+  //       setTables(response.data["tables"]);
+  //       setStudentName(response.data["student_name"]);
+  //     })
+  //     .catch();
+  // };
 
-  const EditCell = ({ rowData, onChange, ...props }) => {
-    tables.map((table) => {
-      rowData = JSON.parse(table.table_data)["data"];
+  // const columns = [
+  //   {
+  //     //=(alldata) => [console.log(alldata[0]),
+  //     dataField: "index",
+  //     text: "index",
+  //   },
+  //   {
+  //     dataField: "Course Title",
+  //     text: "Course Title",
+  //   },
+  //   {
+  //     dataField: "Credit",
+  //     text: "Credit",
+  //   },
+  //   {
+  //     dataField: "Score",
+  //     text: "Score",
+  //   },
+  //   {
+  //     dataField: "Grade Point",
+  //     text: "Grade Point",
+  //   },
+  // ];
 
-      console.log(JSON.parse(table.table_data)["schema"]["fields"]);
-    });
-    console.log("obgynnnnnnnnnnnnnnnnnnnnnnnn");
-    console.log(rowData);
-    console.log("rowDatazzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
-    return (
-      <Cell {...props}>
-        {rowData !== null ? (
-          <input className="input" defaultValue={JSON.stringify(rowData)} />
-        ) : (
-          rowData
-        )}
-      </Cell>
-    );
-  };
+  // const EditCell = ({ rowData, onChange, ...props }) => {
+  //   tables.map((table) => {
+  //     rowData = JSON.parse(table.table_data)["data"];
+
+  //     console.log(JSON.parse(table.table_data)["schema"]["fields"]);
+  //   });
+  //   console.log("obgynnnnnnnnnnnnnnnnnnnnnnnn");
+  //   console.log(rowData);
+  //   console.log("rowDatazzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+  //   return (
+  //     <Cell {...props}>
+  //       {rowData !== null ? (
+  //         <input className="input" defaultValue={JSON.stringify(rowData)} />
+  //       ) : (
+  //         rowData
+  //       )}
+  //     </Cell>
+  //   );
+  // };
 
   //Ry---modified
-  const onSaveData = async () => {
-    // const columns = Array.from(tableEl.querySelectorAll("th")).map(
-    //   (it) => it.textContent
-    // );
-    // const rows = tableEl.querySelectorAll("tbody > tr");
-    // return Array.from(rows).map((row) => {
-    //   const cells = Array.from(row.querySelectorAll("td"));
-    //   return columns.reduce((obj, col, idx) => {
-    //     obj[col] = cells[idx].textContent;
-    //     return obj;
-    //   }, {});
-    // });
+  // const onSaveData = async () => {
+  //   // const columns = Array.from(tableEl.querySelectorAll("th")).map(
+  //   //   (it) => it.textContent
+  //   // );
+  //   // const rows = tableEl.querySelectorAll("tbody > tr");
+  //   // return Array.from(rows).map((row) => {
+  //   //   const cells = Array.from(row.querySelectorAll("td"));
+  //   //   return columns.reduce((obj, col, idx) => {
+  //   //     obj[col] = cells[idx].textContent;
+  //   //     return obj;
+  //   //   }, {});
+  //   // });
 
-    console.log("Save data");
-  };
+  //   console.log("Save data");
+  // };
+  console.log("state", state);
+
+  function tableUpdate(e, idx) {
+    dispatch({ type: ActionTypes.UPDATE_TABLE_CONFIG, table_idx: idx });
+  }
 
   return (
     <>
@@ -158,17 +142,18 @@ export default () => {
         </div>
       </div>
       <Accordion defaultActiveKey="0">
-        {tables.map((table, idx) => {
-          let columnNames = JSON.parse(table.table_data)["schema"]["fields"];
-          const newColumnNames = columnNames.map((v) => ({
-            ...v,
-            dataField: v.name,
-            text: v.name,
-          }));
+        {state.data.map((table, idx) => {
+          // let columnNames = JSON.parse(table.table_data)["schema"]["fields"];
+          // const newColumnNames = columnNames.map((v) => ({
+          //   ...v,
+          //   dataField: v.name,
+          //   text: v.name,
+          // }));
+          console.log("state", state);
 
           return (
             <Accordion.Item eventKey={idx} key={"table-" + idx}>
-              <Accordion.Header>
+              <Accordion.Header onClick={(e) => tableUpdate(e, idx)}>
                 Table {idx} on Page {table.page}
               </Accordion.Header>
               <Accordion.Body>
@@ -178,27 +163,40 @@ export default () => {
                   </Col>
                   {/* Ry*/}
                   <Col>
-                    <BootstrapTable
+                    {/* <BootstrapTable
                       key={`$(table.page) "+" $(table.table_num)`}
                       keyField="index"
                       data={JSON.parse(table.table_data)["data"]}
                       columns={newColumnNames}
-                      cellEdit={cellEditFactory({
-                        mode: "click",
-                        blurToSave: true,
-                      })}
-                    />
-
+                      // cellEdit={cellEditFactory({
+                      //   mode: "click",
+                      //   blurToSave: true,
+                      // })}
+                    /> */}
+                    {/* <JsonToTable
+                      hover
+                      className="user-table align-items-center"
+                      json={table.table_data.data}
+                    /> */}
+                    {/* 
                     <Button type="submit" id="btn" onClick={onSaveData}>
                       save
-                    </Button>
+                    </Button> */}
+                    <Table
+                      columns={table.table_data.columns}
+                      data={table.table_data.data}
+                      table_idx={idx}
+                      page_idx={table.page}
+                      dispatch={dispatch}
+                      skipReset={state.skipReset}
+                    />
                   </Col>
                 </Row>
-                <Row>
+                {/* <Row>
                   <Col>
                     <EditCell />
                   </Col>
-                </Row>
+                </Row> */}
               </Accordion.Body>
             </Accordion.Item>
           );
