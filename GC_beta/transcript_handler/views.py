@@ -8,7 +8,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework_mongoengine.viewsets import ModelViewSet, GenericViewSet
 
 from .handlers import ExtractTableHandler
-from .models import StudentTable, University, Student, Department, Identifier, Transcript, Education
+from .models import ProcessedTable, StudentTable, University, Student, Department, Identifier, Transcript, Education
 from .serializers import UniversitySerializer, StudentSerializer, TranscriptSerializer
 from .utils import extract_pages_from_raw_file, get_transcripts_and_dump_into_disk
 from GC_beta.settings import BASE_DIR
@@ -95,6 +95,25 @@ def get_engine_usage(request):
     except:
         return JsonResponse({'error': 'something went wrong'}, status=404)
 
+@csrf_exempt
+def update_transcript(request, pk):
+    if request.method == "POST":
+        try:
+            student = Student.objects.get(id=pk)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=404)
+
+        table_data = json.loads(request.body)
+        tables = []
+
+        for table in table_data['data']:
+            new_table = ProcessedTable(page = table['page'], table_num = table['table_num'], table_data = table['table_data'], image_path = table['image_path'], modified = 1)            
+            tables.append(new_table)
+        
+        student.transcript.processed_data = tables
+        student.save()
+
+    return JsonResponse({}, status=200)
 
 @csrf_exempt
 def student_transcript(request, pk):

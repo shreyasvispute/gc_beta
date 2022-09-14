@@ -21,7 +21,11 @@ import { ActionTypes, makeData } from "../utils/studentTable";
 export default () => {
   let params = useParams();
 
-  const [state, dispatch] = useReducer(reducer, makeData(1, params["id"]));
+  const [state, dispatch] = useReducer(
+    reducer.reducer,
+    //makeData(1, params["id"])
+    reducer.initialState
+  );
 
   const [studentName, setStudentName] = useState("");
   const [tables, setTables] = useState([]);
@@ -112,6 +116,39 @@ export default () => {
   // };
   console.log("state", state);
 
+  useEffect(() => {
+    dispatch({ type: ActionTypes.CALL_API });
+    const fetchData = async () => {
+      const response = await makeData(1, params["id"]);
+      if (response.data.length > 1) {
+        debugger;
+        dispatch({ type: ActionTypes.SUCCESS, data: response.data });
+      }
+    };
+    fetchData();
+  }, []);
+
+  async function SaveTableData(e) {
+    let data = [];
+    let stateObject = [...state.data];
+
+    stateObject.map((i) => {
+      let stateDBObject = {};
+      stateDBObject["page"] = i.page;
+      stateDBObject["table_data"] = JSON.stringify(i.table_data);
+      stateDBObject["table_num"] = i.table_num;
+      stateDBObject["image_path"] = i.image_path;
+      data.push(stateDBObject);
+    });
+
+    const response = await axios.post(
+      `/api/students/${params["id"]}/updateTranscript`,
+      {
+        data: data,
+      }
+    );
+  }
+
   function tableUpdate(e, idx) {
     dispatch({ type: ActionTypes.UPDATE_TABLE_CONFIG, table_idx: idx });
   }
@@ -142,28 +179,29 @@ export default () => {
         </div>
       </div>
       <Accordion defaultActiveKey="0">
-        {state.data.map((table, idx) => {
-          // let columnNames = JSON.parse(table.table_data)["schema"]["fields"];
-          // const newColumnNames = columnNames.map((v) => ({
-          //   ...v,
-          //   dataField: v.name,
-          //   text: v.name,
-          // }));
-          console.log("state", state);
+        {state.data &&
+          state.data.map((table, idx) => {
+            // let columnNames = JSON.parse(table.table_data)["schema"]["fields"];
+            // const newColumnNames = columnNames.map((v) => ({
+            //   ...v,
+            //   dataField: v.name,
+            //   text: v.name,
+            // }));
+            console.log("state", state);
 
-          return (
-            <Accordion.Item eventKey={idx} key={"table-" + idx}>
-              <Accordion.Header onClick={(e) => tableUpdate(e, idx)}>
-                Table {idx} on Page {table.page}
-              </Accordion.Header>
-              <Accordion.Body>
-                <Row>
-                  <Col>
-                    <Image src={table.image_path} />
-                  </Col>
-                  {/* Ry*/}
-                  <Col>
-                    {/* <BootstrapTable
+            return (
+              <Accordion.Item eventKey={idx} key={"table-" + idx}>
+                <Accordion.Header onClick={(e) => tableUpdate(e, idx)}>
+                  Table {idx} on Page {table.page}
+                </Accordion.Header>
+                <Accordion.Body>
+                  <Row>
+                    <Col>
+                      <Image src={table.image_path} />
+                    </Col>
+                    {/* Ry*/}
+                    <Col>
+                      {/* <BootstrapTable
                       key={`$(table.page) "+" $(table.table_num)`}
                       keyField="index"
                       data={JSON.parse(table.table_data)["data"]}
@@ -173,34 +211,34 @@ export default () => {
                       //   blurToSave: true,
                       // })}
                     /> */}
-                    {/* <JsonToTable
+                      {/* <JsonToTable
                       hover
                       className="user-table align-items-center"
                       json={table.table_data.data}
                     /> */}
-                    {/* 
+                      {/* 
                     <Button type="submit" id="btn" onClick={onSaveData}>
                       save
                     </Button> */}
-                    <Table
-                      columns={table.table_data.columns}
-                      data={table.table_data.data}
-                      table_idx={idx}
-                      page_idx={table.page}
-                      dispatch={dispatch}
-                      skipReset={state.skipReset}
-                    />
-                  </Col>
-                </Row>
-                {/* <Row>
+                      <Table
+                        columns={table.table_data.columns}
+                        data={table.table_data.data}
+                        table_idx={idx}
+                        page_idx={table.page}
+                        dispatch={dispatch}
+                        skipReset={state.skipReset}
+                      />
+                    </Col>
+                  </Row>
+                  {/* <Row>
                   <Col>
                     <EditCell />
                   </Col>
                 </Row> */}
-              </Accordion.Body>
-            </Accordion.Item>
-          );
-        })}
+                </Accordion.Body>
+              </Accordion.Item>
+            );
+          })}
       </Accordion>
       <Row>
         <Col>
@@ -211,6 +249,7 @@ export default () => {
           >
             <Button> View Table Data </Button>
           </Link>
+          <Button onClick={(e) => SaveTableData(e)}>Save Table Data</Button>
         </Col>
       </Row>
     </>

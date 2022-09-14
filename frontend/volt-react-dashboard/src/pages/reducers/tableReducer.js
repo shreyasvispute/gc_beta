@@ -10,6 +10,12 @@ import {
 } from "../utils/studentTable";
 import update from "immutability-helper";
 
+const initialState = {
+  data: "",
+  skipReset: false,
+  table_idx: 0,
+};
+
 function reducer(state, action) {
   switch (action.type) {
     case ActionTypes.UPDATE_TABLE_CONFIG:
@@ -38,39 +44,24 @@ function reducer(state, action) {
       });
 
     case ActionTypes.ADD_ROW:
-      // debugger;
-      // return {
-      //   data: [
-      //     ...state.data,
-      //     [state.data[action.table_idx]["table_data"].data.push({})],
-      //   ],
-      //   skipReset: true,
-      // };
-      // debugger;
-      // return update(state, {
-      //   skipReset: { $set: true },
-      //   data: [state.data[action.table_idx].table_data.data, { $push: [{}] }],
-      // });
       return produce(state, (draft) => {
         draft.data[action.table_idx].table_data.data.push({});
       });
 
     case ActionTypes.UPDATE_COLUMN_HEADER:
-      debugger;
-      const index = state.columns.findIndex(
+      const index = state.data[state.table_idx].table_data.columns.findIndex(
         (column) => column.id === action.columnId
       );
-      return update(state, {
-        skipReset: { $set: true },
-        columns: { [index]: { label: { $set: action.label } } },
+      return produce(state, (draft) => {
+        draft.data[state.table_idx].table_data.columns[index].label =
+          action.label;
       });
 
     case ActionTypes.UPDATE_CELL:
-      return update(state, {
-        skipReset: { $set: true },
-        data: {
-          [action.rowIndex]: { [action.columnId]: { $set: action.value } },
-        },
+      return produce(state, (draft) => {
+        draft.data[state.table_idx].table_data.data[action.rowIndex][
+          action.columnId
+        ] = action.value;
       });
 
     case ActionTypes.ADD_COLUMN_TO_LEFT:
@@ -129,9 +120,26 @@ function reducer(state, action) {
 
     case ActionTypes.ENABLE_RESET:
       return update(state, { skipReset: { $set: true } });
+
+    case ActionTypes.CALL_API:
+      return {
+        ...state,
+      };
+
+    case ActionTypes.SUCCESS:
+      debugger;
+      return {
+        ...state,
+        data: action.data,
+      };
+
     default:
       return state;
   }
 }
 
-export default reducer;
+let exported = {
+  reducer,
+  initialState,
+};
+export default exported;

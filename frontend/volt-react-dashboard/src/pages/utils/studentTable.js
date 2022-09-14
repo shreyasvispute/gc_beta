@@ -3,7 +3,7 @@ import faker from "faker";
 
 import axios from "axios";
 
-export function makeData(count, studentId) {
+export async function makeData(count, studentId) {
   let data = [];
   let options = [];
   // for (let i = 0; i < count; i++) {
@@ -71,71 +71,154 @@ export function makeData(count, studentId) {
   //   },
   // ];
 
-  let tableArray = [];
-  getTableData(studentId).then((data) => {
-    data.tables.map((e) => {
-      let tables = {};
-      tables["page"] = e.page;
-      tables["table_num"] = e.table_num;
-      tables["table_data"] = e.table_data;
-      tables["image_path"] = e.image_path;
-      tableArray.push(tables);
-    });
-    tableArray.map((e) => {
-      let columnObject = [];
-      let rows = [];
-      let columnNames = [];
+  // let tableArray = [];
+  // let studentName = "";
+  // getTableData(studentId).then((data) => {
+  //   if (data.tables.length > 1 && data.tables[0].modified === 0) {
+  //     studentName = data.student_name;
+  //     data.tables.map((e) => {
+  //       let tables = {};
+  //       tables["page"] = e.page;
+  //       tables["table_num"] = e.table_num;
+  //       tables["table_data"] = e.table_data;
+  //       tables["image_path"] = e.image_path;
+  //       tableArray.push(tables);
+  //     });
+  //     tableArray.map((e) => {
+  //       let columnObject = [];
+  //       let rows = [];
+  //       let columnNames = [];
 
-      let parsedColumns = JSON.parse(e.table_data)["schema"]["fields"];
-      let rowNames = JSON.parse(e.table_data)["data"];
+  //       let parsedColumns = JSON.parse(e.table_data)["schema"]["fields"];
+  //       let rowNames = JSON.parse(e.table_data)["data"];
 
-      rowNames.map((e) => {
-        e["ID"] = faker.mersenne.rand();
-      });
-      rowNames.forEach((element) => {
-        if (element[""] || element[""] === "") {
-          delete element[""];
-        }
-      });
-      rows.push(...rowNames);
+  //       rowNames.map((e) => {
+  //         e["ID"] = faker.mersenne.rand();
+  //       });
+  //       rowNames.forEach((element) => {
+  //         if (element[""] || element[""] === "") {
+  //           delete element[""];
+  //         }
+  //       });
+  //       rows.push(...rowNames);
 
-      parsedColumns.map((n) => {
-        let names = {};
-        if (n.name !== "") {
-          names["id"] = n.name;
-          names["accessor"] = n.name;
-          names["label"] = n.name;
-          names["width"] = 100;
-          names["disableResizing"] = false;
-          names["dataType"] = DataTypes.TEXT;
-          columnNames.push(names);
-        }
-      });
-      columnNames.push({
-        id: 999999,
-        width: 20,
-        label: "+",
-        disableResizing: true,
-        dataType: "null",
-      });
-      columnObject.push(columnNames);
-      e.table_data = { columns: columnNames, data: rowNames };
-    });
-    console.log("tablearray", tableArray);
-  });
+  //       parsedColumns.map((n) => {
+  //         let names = {};
+  //         if (n.name !== "") {
+  //           names["id"] = n.name;
+  //           names["accessor"] = n.name;
+  //           names["label"] = n.name;
+  //           names["width"] = 100;
+  //           names["disableResizing"] = false;
+  //           names["dataType"] = DataTypes.TEXT;
+  //           columnNames.push(names);
+  //         }
+  //       });
+  //       columnNames.push({
+  //         id: 999999,
+  //         width: 20,
+  //         label: "+",
+  //         disableResizing: true,
+  //         dataType: "null",
+  //       });
+  //       columnObject.push(columnNames);
+  //       e.table_data = { columns: columnNames, data: rowNames };
+  //     });
+  //   } else {
+  //     debugger;
 
+  //     studentName = data.student_name;
+  //     tableArray = [...data.tables];
+
+  //     tableArray.map((t) => {
+  //       t.table_data = JSON.parse(t.table_data);
+  //     });
+  //   }
+  //   console.log("tablearray", tableArray);
+  // });
+
+  let arr = [];
+  let response = await getTableData(studentId);
+  console.log(response);
   return {
-    data: tableArray,
+    data: response.tableArray,
     skipReset: false,
     table_idx: 0,
   };
 }
 
 async function getTableData(studentId) {
+  let tableArray = [];
+  let studentName = "";
+
   const response = await axios.get(
     `/api/students/${studentId}/transcript?action=view`
   );
-  return response.data;
+  if (response.status === 200) {
+    let data = response.data;
+    if (data.tables.length > 1 && data.tables[0].modified === 0) {
+      studentName = data.student_name;
+      data.tables.map((e) => {
+        let tables = {};
+        tables["page"] = e.page;
+        tables["table_num"] = e.table_num;
+        tables["table_data"] = e.table_data;
+        tables["image_path"] = e.image_path;
+        tableArray.push(tables);
+      });
+      tableArray.map((e) => {
+        let columnObject = [];
+        let rows = [];
+        let columnNames = [];
+
+        let parsedColumns = JSON.parse(e.table_data)["schema"]["fields"];
+        let rowNames = JSON.parse(e.table_data)["data"];
+
+        rowNames.map((e) => {
+          e["ID"] = faker.mersenne.rand();
+        });
+        rowNames.forEach((element) => {
+          if (element[""] || element[""] === "") {
+            delete element[""];
+          }
+        });
+        rows.push(...rowNames);
+
+        parsedColumns.map((n) => {
+          let names = {};
+          if (n.name !== "") {
+            names["id"] = n.name;
+            names["accessor"] = n.name;
+            names["label"] = n.name;
+            names["width"] = 100;
+            names["disableResizing"] = false;
+            names["dataType"] = DataTypes.TEXT;
+            columnNames.push(names);
+          }
+        });
+        columnNames.push({
+          id: 999999,
+          width: 20,
+          label: "+",
+          disableResizing: true,
+          dataType: "null",
+        });
+        columnObject.push(columnNames);
+        e.table_data = { columns: columnNames, data: rowNames };
+      });
+    } else {
+      debugger;
+
+      studentName = data.student_name;
+      tableArray = [...data.tables];
+
+      tableArray.map((t) => {
+        t.table_data = JSON.parse(t.table_data);
+      });
+    }
+    // console.log("tablearray", tableArray);
+  }
+  return { tableArray, studentName };
 }
 
 export function shortId() {
@@ -153,6 +236,8 @@ export const ActionTypes = Object.freeze({
   ADD_COLUMN_TO_RIGHT: "add_column_to_right",
   DELETE_COLUMN: "delete_column",
   ENABLE_RESET: "enable_reset",
+  CALL_API: "call_api",
+  SUCCESS: "success",
 });
 
 export const DataTypes = Object.freeze({

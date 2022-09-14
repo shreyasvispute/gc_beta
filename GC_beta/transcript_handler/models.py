@@ -47,7 +47,7 @@ class ProcessedTable(EmbeddedDocument):
     table_num = IntField()  # which table
     table_data = StringField()  # json, will be restored to dataframe?
     image_path = StringField()  # localhost abs path for now, under port 8080
-
+    modified = IntField(default=0)
 
 class Transcript(EmbeddedDocument):
     """
