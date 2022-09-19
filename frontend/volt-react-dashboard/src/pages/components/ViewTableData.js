@@ -2,10 +2,21 @@ import React, { useState, useEffect } from "react";
 import {
   Breadcrumb,
   Button,
+  ButtonGroup,
   Row,
   Col,
+  InputGroup,
+  Form,
+  Dropdown,
+  Card,
+  Table,
   Image,
+  DropdownButton,
+  Modal,
+  Spinner,
+  Container,
   Accordion,
+  FormCheck,
 } from "@themesberg/react-bootstrap";
 import { useParams } from "react-router-dom";
 import { JsonToTable } from "react-json-to-table";
@@ -15,6 +26,7 @@ export default () => {
   let params = useParams();
   const [studentName, setStudentName] = useState("");
   const [tables, setTables] = useState([]);
+  const [calcgpaText, setcalcgpaText] = useState("");
 
   useEffect(() => {
     if (tables.length === 0) {
@@ -24,18 +36,34 @@ export default () => {
   }, [studentName]);
 
   const fetchData = async () => {
-    const response = await axios
-      .get(`/api/students/${params["id"]}/transcript?action=viewtables`)
-      .then((response) => {
-        response.data.tables.forEach((e) => {
-          delete e._id;
-        });
+    const response = await axios.get(
+      `/api/students/${params["id"]}/transcript?action=viewtables`
+    );
+    // .then((response) => {
+    //   // debugger;
+    //   // response.data.tables.forEach((e) => {
+    //   //   delete e._id;
+    //   });
 
-        setTables(response.data["tables"]);
-        setStudentName(response.data["student_name"]);
-      })
-      .catch();
+    setTables(JSON.parse(response.data["tables"]));
+    setStudentName(response.data["student_name"]);
+    //      })
+    //    .catch();
     console.log(response);
+  };
+
+  async function calculateGPA(e) {
+    const response = await axios.get(
+      `/api/students/${params["id"]}/transcript?action=calculateGPA`
+    );
+    console.log(response);
+    if (response.data.result) {
+      setcalcgpaText(response.data.result);
+    }
+  }
+
+  const handleChange = (event) => {
+    setcalcgpaText(event.target.value);
   };
 
   return (
@@ -55,6 +83,26 @@ export default () => {
               hover
               className="user-table align-items-center"
               json={tables}
+            />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <Button
+              onClick={(e) => {
+                calculateGPA(e);
+              }}
+            >
+              Calculate GPA
+            </Button>
+          </Col>
+          <Col>
+            <input
+              type="text"
+              id="gpaText"
+              name="gpaText"
+              onChange={handleChange}
+              value={calcgpaText}
             />
           </Col>
         </Row>

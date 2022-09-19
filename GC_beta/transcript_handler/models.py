@@ -76,6 +76,7 @@ class Student(Document):
     name = StringField(max_length=40)
     gpa = DecimalField(default=0.00, min_value=0, max_value=4, precision=2)
     transcript = EmbeddedDocumentField(Transcript, default=Transcript())
+    consolidatedData = StringField()
     education = EmbeddedDocumentField(Education, default=Education())
     status = StringField(default="NEW")
 

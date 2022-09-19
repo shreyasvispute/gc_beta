@@ -1,5 +1,7 @@
+from cProfile import run
 import io
 import os
+from pdb import runcall
 from threading import Thread
 from django.shortcuts import render
 from django.http import JsonResponse
@@ -13,6 +15,7 @@ from .serializers import UniversitySerializer, StudentSerializer, TranscriptSeri
 from .utils import extract_pages_from_raw_file, get_transcripts_and_dump_into_disk
 from GC_beta.settings import BASE_DIR
 import json
+from .run import run_class, run_gpa
 from bson.json_util import dumps
 
 
@@ -112,7 +115,7 @@ def update_transcript(request, pk):
         
         student.transcript.processed_data = tables
         student.save()
-
+        
     return JsonResponse({}, status=200)
 
 @csrf_exempt
@@ -156,9 +159,24 @@ def student_transcript(request, pk):
                 student = Student.objects.get(id=pk)
             except:
                 return JsonResponse({'error': "student not found."}, status=404)
-            processed_transcripts = StudentTable.objects.all()
-            tables_in_dict = [json.loads(x.to_json()) for x in processed_transcripts]
-            return JsonResponse({'student_name': student.name, 'tables': tables_in_dict})
+        
+            df, consolidatedData = run_class(pk)
+            student.consolidatedData = json.dumps(consolidatedData['data']) 
+            student.save()
+            #processed_transcripts = StudentTable.objects.all()
+            processed_transcripts = student.consolidatedData
+            #tables_in_dict = [json.loads(x.to_json()) for x in processed_transcripts]
+            return JsonResponse({'student_name': student.name, 'tables': processed_transcripts})
+        elif request.GET.get('action') == 'calculateGPA':
+            student = None
+            try:
+                student = Student.objects.get(id=pk)
+            except:
+                return JsonResponse({'error': "student not found."}, status=404)
+        
+            df, consolidatedData = run_class(pk)
+            result = run_gpa(student.education.university, df)
+            return JsonResponse({'student_name': student.name, 'result': result})
 
     elif request.method == 'POST':  # add new transcripts, default is override
         pages = list(map(int, request.POST['validPages'].split(',')))

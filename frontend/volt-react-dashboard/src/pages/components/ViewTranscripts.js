@@ -21,11 +21,7 @@ import { ActionTypes, makeData } from "../utils/studentTable";
 export default () => {
   let params = useParams();
 
-  const [state, dispatch] = useReducer(
-    reducer.reducer,
-    //makeData(1, params["id"])
-    reducer.initialState
-  );
+  const [state, dispatch] = useReducer(reducer.reducer, reducer.initialState);
 
   const [studentName, setStudentName] = useState("");
   const [tables, setTables] = useState([]);
@@ -119,7 +115,7 @@ export default () => {
   useEffect(() => {
     dispatch({ type: ActionTypes.CALL_API });
     const fetchData = async () => {
-      const response = await makeData(1, params["id"]);
+      const response = await makeData(params["id"]);
       if (response.data.length > 1) {
         debugger;
         dispatch({ type: ActionTypes.SUCCESS, data: response.data });
